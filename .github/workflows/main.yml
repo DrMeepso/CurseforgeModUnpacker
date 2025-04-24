@@ -1,0 +1,91 @@
+name: Build and Release Wails App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag version (e.g., v1.0.0)'
+        required: false
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            GOOS: linux
+            GOARCH: amd64
+            BIN_EXT: ''
+          - os: windows-latest
+            GOOS: windows
+            GOARCH: amd64
+            BIN_EXT: '.exe'
+          - os: macos-latest
+            GOOS: darwin
+            GOARCH: amd64
+            BIN_EXT: ''
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install UPX
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            sudo apt-get update && sudo apt-get install -y upx
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install upx
+          elif [[ "$RUNNER_OS" == "Windows" ]]; then
+            choco install upx -y
+          fi
+        shell: bash
+
+      - name: Set environment variables
+        run: |
+          echo "GOOS=${{ matrix.GOOS }}" >> $GITHUB_ENV
+          echo "GOARCH=${{ matrix.GOARCH }}" >> $GITHUB_ENV
+          echo "BIN_EXT=${{ matrix.BIN_EXT }}" >> $GITHUB_ENV
+
+      - name: Build Wails app
+        run: wails build -platform $GOOS/$GOARCH
+
+      - name: Compress binary
+        run: |
+          BIN_NAME=$(basename $(find build/bin -type f -name "*${{ matrix.BIN_EXT }}"))
+          upx --best --lzma "build/bin/$BIN_NAME"
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wails-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
+          path: build/bin/*${{ matrix.BIN_EXT }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
