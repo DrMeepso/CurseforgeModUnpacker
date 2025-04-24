@@ -3,7 +3,11 @@
 
 export function FolderDialog():Promise<string>;
 
+export function OpenDonationPage():Promise<void>;
+
 export function RunUnpack(arg1:string,arg2:string):Promise<boolean>;
+
+export function SetIncludeOverrides(arg1:boolean):Promise<void>;
 
 export function ShowErrorDialog(arg1:string):Promise<void>;
 

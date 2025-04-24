@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { ZipFileDialog, VerifyModpackFile, ShowErrorDialog, FolderDialog, RunUnpack } from '../wailsjs/go/main/App'
+  import { onMount } from 'svelte';
+    import { ZipFileDialog, VerifyModpackFile, ShowErrorDialog, FolderDialog, RunUnpack, SetIncludeOverrides } from '../wailsjs/go/main/App'
     
     let zipFilePath: string = $state("")
     let isValidModpack: boolean = $state(false)
@@ -30,6 +31,14 @@
         modpackDisplayName = isValid.split(":")[1];
     }
 
+    let IncludeOverides: HTMLInputElement | null = null;
+    onMount(() => {
+        IncludeOverides!.oninput = () => {
+            includeOverrides = IncludeOverides?.checked || false;
+            SetIncludeOverrides(includeOverrides);
+        };
+    });
+
 </script>
 
 <main>
@@ -59,7 +68,7 @@
     <p class="small-text">Extra Options:</p>
     <div id="extra-options">
         <div class="extra-option">
-            <input type="checkbox" id="include-overrides" bind:group={includeOverrides} />
+            <input type="checkbox" id="include-overrides" bind:group={includeOverrides} bind:this={IncludeOverides} />
             <label for="include-overrides">Include overrides</label>
         </div>
     </div>

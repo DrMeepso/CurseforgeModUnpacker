@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -41,4 +42,21 @@ func main() {
 	if err != nil {
 		println("Error:", err.Error())
 	}
+}
+
+func APIKey() string {
+	// Read the secrets.json file
+	file, err := secrets.Open("secrets.json")
+	if err != nil {
+		return ""
+	}
+	defer file.Close()
+
+	// Decode the JSON data
+	var secret secretsStruct
+	if err := json.NewDecoder(file).Decode(&secret); err != nil {
+		return ""
+	}
+
+	return secret.Key
 }

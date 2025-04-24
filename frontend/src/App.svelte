@@ -2,34 +2,26 @@
     import FileSelect from "./FileSelect.svelte";
     import Download from "./Download.svelte";
     import { EventsOn, EventsEmit } from '../wailsjs/runtime/runtime'
+    import { OpenDonationPage } from '../wailsjs/go/main/App'
 
     enum State {
         FileSelect,
-        Downloading,
-        Finished,
+        Downloading
     }
 
-    const allOutput: string[] = $state([]);
-    allOutput.push("Starting...");
+    const UnpackerOutput: string[] = $state([]);
+    UnpackerOutput.push("Starting...");
 
 
     EventsOn("output", (output: string) => {
-        console.log("Output: ", output);
-        allOutput.push(output);
+        UnpackerOutput.push(output);
     });
 
     let currentState: State = $state(State.FileSelect);
     EventsOn("stateChange", (state_index: number) => {
         console.log("State changed to: ", state_index);
         currentState = state_index in State ? state_index : State.FileSelect;
-
-        console.log("Current state: ", currentState);
-        console.log("FileSelect state: ", State.FileSelect);
-        console.log("Downloading state: ", State.Downloading);
-        console.log("Finished state: ", State.Finished);
-
     });
-    
 
 </script>
 
@@ -40,10 +32,10 @@
     {#if currentState == State.FileSelect}
         <FileSelect/>
     {:else if currentState == State.Downloading}
-        <Download allOutput={allOutput} />
-    {:else if currentState == State.Finished}
-        <p>Finished!</p>
+        <Download allOutput={UnpackerOutput} />
     {/if}
+
+    <p id="kofi-support">Support me on <a onclick={OpenDonationPage}>Kofi</a></p>
 
 </main>
 
@@ -70,112 +62,21 @@
         font-weight: 700;
     }
 
-    p {
-        font: sans-serif;
-    }
-
-    .directory-selector {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 2px;
-    }
-
-    .directory-selector input {
-        width: 100%;
-        padding: 0.5em;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 1em;
-    }
-    .directory-selector button {
-        margin-left: 0.5em;
-        padding: 0.5em 1em;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1em;
-    }
-
-    #download-button {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        margin-top: 10px;
-        font: sans-serif;
-    }
-
-    #download-button p {
+    #kofi-support
+    {
+        margin-top: 20px;
+        font-size: 0.8em;
+        color: #888;
+        position: absolute;
+        left: 5px;
+        bottom: 5px;
         margin: 0;
-        font-size: 0.8em;
-        color: #888;
     }
 
-    .small-text {
-        margin: 0;
-        font-size: 0.8em;
-        color: #888;
-        width: 100%;
-        text-align: left;
-    }
-
-    #download-button button {
-        padding: 0.5em 1em;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1em;
-    }
-
-    #download-button button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-    }
-    #download-button button:hover:not(:disabled) {
-        background-color: #0056b3;
-    }
-    #download-button button:active:not(:disabled) {
-        background-color: #004494;
-    }
-
-    #extra-options {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        margin-top: 0;
-        font: sans-serif;
-    }
-    .extra-option {
-        margin-left: 10px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .extra-option input {
-        width: 15px;
-        height: 15px;
-        cursor: pointer;
-    }
-    .extra-option label {
-        font-size: 0.8em;
-        color: #888;
-        cursor: pointer;
-    }
-    .extra-option label:hover {
-        color: #555;
-    }
-    .extra-option input:checked + label {
+    #kofi-support a {
         color: #007bff;
-
+        text-decoration: underline;
+        cursor: pointer;
     }
-    input[type="checkbox"]:checked {
-        background-color: #007bff; /* Blue background */
-        border-color: #007bff;
-    }
-
 
 </style>

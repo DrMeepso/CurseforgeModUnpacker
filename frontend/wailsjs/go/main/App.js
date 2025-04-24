@@ -6,8 +6,16 @@ export function FolderDialog() {
   return window['go']['main']['App']['FolderDialog']();
 }
 
+export function OpenDonationPage() {
+  return window['go']['main']['App']['OpenDonationPage']();
+}
+
 export function RunUnpack(arg1, arg2) {
   return window['go']['main']['App']['RunUnpack'](arg1, arg2);
+}
+
+export function SetIncludeOverrides(arg1) {
+  return window['go']['main']['App']['SetIncludeOverrides'](arg1);
 }
 
 export function ShowErrorDialog(arg1) {

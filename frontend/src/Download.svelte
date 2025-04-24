@@ -1,7 +1,46 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
     import { ZipFileDialog, VerifyModpackFile, ShowErrorDialog, FolderDialog } from '../wailsjs/go/main/App'
     import { EventsEmit, EventsOn } from '../wailsjs/runtime/runtime'
-    export let allOutput: string[];
+    let { allOutput } = $props();
+
+    let progressValue: number = $state(0);
+    
+    $effect(() => {
+        const length = allOutput.length;
+        scrollToBottom(allOutput);
+    })
+
+    function scrollToBottom(trigger: any) {
+        const outputHolder = document.getElementById("output-holder");
+        if (outputHolder) {
+            console.log("Scrolling to bottom...");
+            outputHolder.scrollTop = outputHolder.scrollHeight;
+        }
+    }
+
+    let progressBar: HTMLProgressElement | null = null;
+    onMount(() => {
+        EventsOn("progress", (progress: number) => {
+            if (progressBar) {
+                progressValue = progress;
+                progressBar.value = progressValue;
+            }
+        });
+    });
+
+    let isFinished : boolean = $state(false);
+
+    EventsOn("finished", () => {
+        if (progressBar) {
+            progressBar.value = 100;
+            progressValue = 100;
+        }
+        // add a bit of delay to show the progress bar at 100%
+        setTimeout(() => {
+            isFinished = true;
+        }, 100);
+    });
 
 </script>
 
@@ -13,6 +52,17 @@
             <p>{output}</p>
         {/each}
     </div>
+
+    <progress value="0" max="100" style="width: 100%; margin-top: 10px;" bind:this={progressBar}></progress>
+    <p>{progressValue}%</p>
+
+    {#if isFinished}
+        <button onclick={() => {
+            EventsEmit("stateChange", 0); // Change to finished state
+        }} style="margin-top: 10px;">Done</button>
+    {:else}
+        <button style="margin-top: 10px;" disabled>Done</button>
+    {/if}
 
 </main>
 
@@ -52,54 +102,28 @@
         text-align: left;
     }
 
-    .directory-selector {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 2px;
-    }
-
-    .directory-selector input {
+    progress {
         width: 100%;
-        padding: 0.5em;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 1em;
-    }
-    .directory-selector button {
-        margin-left: 0.5em;
-        padding: 0.5em 1em;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1em;
-    }
-
-    #download-button {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+        height: 20px;
         margin-top: 10px;
-        font: sans-serif;
     }
 
-    #download-button p {
+    progress::-webkit-progress-bar {
+        background-color: #f3f3f3;
+        border-radius: 4px;
+    }
+    progress::-webkit-progress-value {
+        background-color: #007bff;
+        border-radius: 4px;
+    }
+
+    p {
         margin: 0;
         font-size: 0.8em;
         color: #888;
     }
 
-    .small-text {
-        margin: 0;
-        font-size: 0.8em;
-        color: #888;
-        width: 100%;
-        text-align: left;
-    }
-
-    #download-button button {
+    button {
         padding: 0.5em 1em;
         background-color: #007bff;
         color: white;
@@ -107,53 +131,18 @@
         border-radius: 4px;
         cursor: pointer;
         font-size: 1em;
+        width: 100%;
     }
 
-    #download-button button:disabled {
+    button:disabled {
         background-color: #ccc;
         cursor: not-allowed;
     }
-    #download-button button:hover:not(:disabled) {
+    button:hover:not(:disabled) {
         background-color: #0056b3;
     }
-    #download-button button:active:not(:disabled) {
+    button:active:not(:disabled) {
         background-color: #004494;
     }
-
-    #extra-options {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        margin-top: 0;
-        font: sans-serif;
-    }
-    .extra-option {
-        margin-left: 10px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .extra-option input {
-        width: 15px;
-        height: 15px;
-        cursor: pointer;
-    }
-    .extra-option label {
-        font-size: 0.8em;
-        color: #888;
-        cursor: pointer;
-    }
-    .extra-option label:hover {
-        color: #555;
-    }
-    .extra-option input:checked + label {
-        color: #007bff;
-
-    }
-    input[type="checkbox"]:checked {
-        background-color: #007bff; /* Blue background */
-        border-color: #007bff;
-    }
-
 
 </style>
