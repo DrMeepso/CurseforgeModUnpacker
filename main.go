@@ -11,10 +11,10 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-//go:embed apikey.json
-var apiKeyFile embed.FS
+//go:embed secrets.json
+var secrets embed.FS
 
-type apiKey struct {
+type secretsStruct struct {
 	Key string `json:"api_key"`
 }
 
