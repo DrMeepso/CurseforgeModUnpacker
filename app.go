@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -252,6 +253,22 @@ func BeginUnpack(mods []ModFile, outputDir string, ctx context.Context, zipReade
 				continue
 			}
 
+			// read the response body into memory
+			bodyBytes, err := ioutil.ReadAll(resp.Body)
+			IfErrorReturn(err, "Error reading response body", ctx)
+
+			// make sure its a valid jar file
+
+			// open the response body as a zip file
+			jarFile, err := zip.NewReader(bytes.NewReader(bodyBytes), int64(len(bodyBytes)))
+			IfErrorReturn(err, "Error: File is not a valid jar file", ctx)
+
+			_, e := jarFile.Open("META-INF/MANIFEST.MF")
+			if e != nil {
+				IfErrorReturn(e, "Error: File is not a valid jar file", ctx)
+				continue
+			}
+
 			// write the file to disk
 			filepath := outputDir + "/" + curseForgeMod.Data.Slug + ".jar"
 			if IncludeOverrides {
@@ -262,7 +279,7 @@ func BeginUnpack(mods []ModFile, outputDir string, ctx context.Context, zipReade
 			defer out.Close()
 
 			// write the response body to the file
-			_, err = io.Copy(out, resp.Body)
+			_, err = io.Copy(out, bytes.NewReader(bodyBytes))
 			IfErrorReturn(err, "Error writing file for mod: "+curseForgeMod.Data.Name, ctx)
 
 			finishedPercent := 100 - (len(UndownloadedMods) * 100 / len(mods))
