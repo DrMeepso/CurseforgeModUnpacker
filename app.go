@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -170,7 +171,7 @@ func (a *App) RunUnpack(modfilePath string, outputFolder string) (bool, error) {
 
 			if IncludeOverrides {
 				// make a /mods folder in the output folder
-				err := os.MkdirAll(outputFolder+"/mods", 0755)
+				err := os.MkdirAll(filepath.Join(outputFolder, "mods"), 0755)
 				IfErrorReturn(err, "Error creating mods folder", a.ctx)
 				PrintOutput("Creating mods folder", a.ctx)
 			}
@@ -270,11 +271,11 @@ func BeginUnpack(mods []ModFile, outputDir string, ctx context.Context, zipReade
 			}
 
 			// write the file to disk
-			filepath := outputDir + "/" + curseForgeMod.Data.Slug + ".jar"
+			path := filepath.Join(outputDir, curseForgeMod.Data.Slug+".jar")
 			if IncludeOverrides {
-				filepath = outputDir + "/mods/" + curseForgeMod.Data.Slug + ".jar"
+				path = filepath.Join(outputDir, "mods", curseForgeMod.Data.Slug+".jar")
 			}
-			out, err := os.Create(filepath)
+			out, err := os.Create(path)
 			IfErrorReturn(err, "Error creating file for mod: "+curseForgeMod.Data.Name, ctx)
 			defer out.Close()
 
@@ -316,12 +317,12 @@ func BeginUnpack(mods []ModFile, outputDir string, ctx context.Context, zipReade
 			for i := 1; i < len(filePathParts)-1; i++ {
 				// get the slice of the path from 1 to i
 				path := filePathParts[1 : i+1]
-				err := os.MkdirAll(outputDir+"\\"+strings.Join(path, "\\"), 0755)
+				err := os.MkdirAll(filepath.Join(append([]string{outputDir}, path...)...), 0755)
 				IfErrorReturn(err, "Error creating folder: "+filePathParts[i], ctx)
 			}
 			// create the file
 			path := filePathParts[1 : len(filePathParts)-1]
-			outFile, err := os.Create(outputDir + "\\" + strings.Join(path, "\\") + "\\" + filePathParts[len(filePathParts)-1])
+			outFile, err := os.Create(filepath.Join(append(append([]string{outputDir}, path...), filePathParts[len(filePathParts)-1])...))
 			IfErrorReturn(err, "Error creating file: "+filePathParts[len(filePathParts)-1], ctx)
 			defer outFile.Close()
 
